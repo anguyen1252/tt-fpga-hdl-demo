@@ -23,12 +23,12 @@
    //       - tt_um_fpga_hdl_demo for tt_fpga_hdl_demo repo
    //       - tt_um_example for tt06_verilog_template repo
    //   o var(target, FPGA)  // or ASIC (below)
-   set(MAKERCHIP, 0)   /// 1 for simulating in Makerchip.
+   set(MAKERCHIP, 1)   /// 1 for simulating in Makerchip.
    var(my_design, tt_um_template)   /// The name of your top-level TT module, to match your info.yml.
    var(target, FPGA)  /// FPGA or ASIC
    //-------------------------------------------------------
    
-   var(debounce_inputs, 0)         /// 1: Provide synchronization and debouncing on all input signals.
+   var(debounce_inputs, 1)         /// 1: Provide synchronization and debouncing on all input signals.
                                    /// 0: Don't provide synchronization and debouncing.
                                    /// m5_neq(m5_MAKERCHIP, 1): Debounce unless in Makerchip.
    
