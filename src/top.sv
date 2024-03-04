@@ -61,7 +61,7 @@
          $cnt = $reset ? 1'b0 : (>>1$cnt + 1);
          //$valid = $cnt;
          $valid = $reset ? 1'b0: ($random_in & !(>>1$random_in)) ? 1'b1: 1'b0;
-         $valid_or_reset = $valid || $reset;
+         //$valid_or_reset = $valid || $reset;
          
       ?$valid
       @1
