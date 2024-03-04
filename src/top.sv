@@ -54,7 +54,7 @@
          //$equals_in = *ui_in[7];
          $random_in = *ui_in[7];
       @1
-         //$op[2:0] = *ui_in[6:4];
+         $op[2:0] = *ui_in[6:4];
          //$val1[7:0] = >>1$out;
          //$val2[7:0] = {4'b0, *ui_in[3:0]};
          
@@ -86,8 +86,10 @@
                 $dice_digit == 4'h6 ? 8'b11111101: // 6. = 16
                 $dice_digit == 4'h7 ? 8'b10000111: // 7. = 17
                 $dice_digit == 4'h8 ? 8'b11111111: // 8. = 18
-                               4'h9 ? 8'b11101111: // 9. = 19
+                $dice_digit == 4'h9 ? 8'b11101111: // 9. = 19
                                8'b0;
+         
+         
          
    // Note that pipesignals assigned here can be found under /fpga_pins/fpga.
    
