@@ -1,4 +1,4 @@
-\m5_TLV_version 1d: tl-x.org
+\m5_TLV_version 1d --inlineGen --noDirectiveComments --noline --clkAlways --bestsv --debugSigsYosys: tl-x.org
 \m5
    use(m5-1.0)
    
