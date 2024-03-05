@@ -48,41 +48,38 @@
 \TLV my_design()
    |my_design
       @0
-         $reset = *reset;
-         $random_in = *ui_in[7];
+         $reset = *reset && *ui_in[7];
+         //$random_in = *ui_in[7];
       @1
-         $op[2:0] = *ui_in[6:4];
-         //$val1[7:0] = >>1$out;
-         //$val2[7:0] = {4'b0, *ui_in[3:0]};
-         $cnt = $reset ? 1'b0 : (>>1$cnt + 1);
-         $valid = $cnt;
-         $valid = $reset ? 1'b0: ($random_in & !(>>1$random_in)) ? 1'b1: 1'b0;
-         //$valid_or_reset = $valid || $reset;
-         
+         $cnt = $reset ? 1'b0 : (>>1$cnt);
+         $out[7:0] = $reset == 1'b1 ? 8'b0: 
+                                >>1$out[7:0];
+                              
       @2
          $dice_digit[3:0] = $out[3:0];
          *uo_out =
-                $dice_digit == 4'h0 ? 8'b00111111: // 0 =10
-                $dice_digit == 4'h1 ? 8'b00000110:
-                $dice_digit == 4'h2 ? 8'b01011011:
-                $dice_digit == 4'h3 ? 8'b01001111:
-                $dice_digit == 4'h4 ? 8'b01100110:
-                $dice_digit == 4'h5 ? 8'b01101101:
-                $dice_digit == 4'h6 ? 8'b01111101:
-                $dice_digit == 4'h7 ? 8'b00000111:
-                $dice_digit == 4'h8 ? 8'b01111111:
-                $dice_digit == 4'h9 ? 8'b01101111:
-                $dice_digit == 4'h0 ? 8'b10111111: // 0. = 20
-                $dice_digit == 4'h1 ? 8'b10000110: // 1. = 11
-                $dice_digit == 4'h2 ? 8'b11011011: // 2. = 12
-                $dice_digit == 4'h3 ? 8'b11001111: // 3. = 13
-                $dice_digit == 4'h4 ? 8'b11100110: // 4. = 14
-                $dice_digit == 4'h5 ? 8'b11101101: // 5. = 15
-                $dice_digit == 4'h6 ? 8'b11111101: // 6. = 16
-                $dice_digit == 4'h7 ? 8'b10000111: // 7. = 17
-                $dice_digit == 4'h8 ? 8'b11111111: // 8. = 18
-                $dice_digit == 4'h9 ? 8'b11101111: // 9. = 19
-                               8'b0;
+             $dice_digit == 4'h0 ? 8'b00111111: // 0 =10
+             $dice_digit == 4'h1 ? 8'b00000110:
+             $dice_digit == 4'h2 ? 8'b01011011:
+             $dice_digit == 4'h3 ? 8'b01001111:
+             $dice_digit == 4'h4 ? 8'b01100110:
+             $dice_digit == 4'h5 ? 8'b01101101:
+             $dice_digit == 4'h6 ? 8'b01111101:
+             $dice_digit == 4'h7 ? 8'b00000111:
+             $dice_digit == 4'h8 ? 8'b01111111:
+             $dice_digit == 4'h9 ? 8'b01101111:
+             $dice_digit == 4'h0 ? 8'b10111111: // 0. = 20
+             $dice_digit == 4'h1 ? 8'b10000110: // 1. = 11
+             $dice_digit == 4'h2 ? 8'b11011011: // 2. = 12
+             $dice_digit == 4'h3 ? 8'b11001111: // 3. = 13
+             $dice_digit == 4'h4 ? 8'b11100110: // 4. = 14
+             $dice_digit == 4'h5 ? 8'b11101101: // 5. = 15
+             $dice_digit == 4'h6 ? 8'b11111101: // 6. = 16
+             $dice_digit == 4'h7 ? 8'b10000111: // 7. = 17
+             $dice_digit == 4'h8 ? 8'b11111111: // 8. = 18
+             $dice_digit == 4'h9 ? 8'b11101111: // 9. = 19
+                            8'b0;
+                   
          
    
    // Note that pipesignals assigned here can be found under /fpga_pins/fpga.
