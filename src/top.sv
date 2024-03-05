@@ -2,12 +2,12 @@
 \m5
    use(m5-1.0)
    
-   
-   // ########################################################
-   // #                                                      #
-   // #  Empty template for Tiny Tapeout Makerchip Projects  #
-   // #                                                      #
-   // ########################################################
+
+   // #################################################################
+   // #                                                               #
+   // #  Starting-Point Code for MEST Course Tiny Tapeout Calculator  #
+   // #                                                               #
+   // #################################################################
    
    // ========
    // Settings
@@ -28,7 +28,7 @@
    var(target, FPGA)  /// FPGA or ASIC
    //-------------------------------------------------------
    
-   var(debounce_inputs, 1)         /// 1: Provide synchronization and debouncing on all input signals.
+   var(debounce_inputs, 0)         /// 1: Provide synchronization and debouncing on all input signals.
                                    /// 0: Don't provide synchronization and debouncing.
                                    /// m5_neq(m5_MAKERCHIP, 1): Debounce unless in Makerchip.
    
@@ -41,50 +41,93 @@
    var(debounce_cnt, m5_if_eq(m5_MAKERCHIP, 1, 8'h03, 8'hff))
 
 \SV
+   m4_include_lib(https:/['']/raw.githubusercontent.com/efabless/chipcraft---mest-course/main/tlv_lib/calculator_shell_lib.tlv)
    // Include Tiny Tapeout Lab.
-   m4_include_lib(['https:/']['/raw.githubusercontent.com/os-fpga/Virtual-FPGA-Lab/35e36bd144fddd75495d4cbc01c4fc50ac5bde6f/tlv_lib/tiny_tapeout_lib.tlv'])
+   m4_include_lib(https:/['']/raw.githubusercontent.com/os-fpga/Virtual-FPGA-Lab/35e36bd144fddd75495d4cbc01c4fc50ac5bde6f/tlv_lib/tiny_tapeout_lib.tlv)
 
 
-\TLV my_design()
-   |my_design
-      @0
-         $reset = *reset && *ui_in[7];
-         //$random_in = *ui_in[7];
-      @1
-         $cnt = $reset ? 1'b0 : (>>1$cnt);
-         $out[7:0] = $reset == 1'b1 ? 8'b0: 
-                                >>1$out[7:0];
-                              
-      @2
-         $dice_digit[3:0] = $out[3:0];
-         *uo_out =
-             $dice_digit == 4'h0 ? 8'b00111111: // 0 =10
-             $dice_digit == 4'h1 ? 8'b00000110:
-             $dice_digit == 4'h2 ? 8'b01011011:
-             $dice_digit == 4'h3 ? 8'b01001111:
-             $dice_digit == 4'h4 ? 8'b01100110:
-             $dice_digit == 4'h5 ? 8'b01101101:
-             $dice_digit == 4'h6 ? 8'b01111101:
-             $dice_digit == 4'h7 ? 8'b00000111:
-             $dice_digit == 4'h8 ? 8'b01111111:
-             $dice_digit == 4'h9 ? 8'b01101111:
-             $dice_digit == 4'h0 ? 8'b10111111: // 0. = 20
-             $dice_digit == 4'h1 ? 8'b10000110: // 1. = 11
-             $dice_digit == 4'h2 ? 8'b11011011: // 2. = 12
-             $dice_digit == 4'h3 ? 8'b11001111: // 3. = 13
-             $dice_digit == 4'h4 ? 8'b11100110: // 4. = 14
-             $dice_digit == 4'h5 ? 8'b11101101: // 5. = 15
-             $dice_digit == 4'h6 ? 8'b11111101: // 6. = 16
-             $dice_digit == 4'h7 ? 8'b10000111: // 7. = 17
-             $dice_digit == 4'h8 ? 8'b11111111: // 8. = 18
-             $dice_digit == 4'h9 ? 8'b11101111: // 9. = 19
-                            8'b0;
-                   
-         
+\TLV calc()
    
+   |calc
+      @0
+         $reset = *reset;
+         $equals_in = *ui_in[7];
+         
+      @1
+        
+         $op[2:0] = *ui_in[6:4];
+         $val1[7:0] = >>1$out;
+         $val2[7:0] = {4'b0, *ui_in[3:0]};
+         
+         $cnt = $reset ? 1'b0 : (>>1$cnt + 1);
+         //$valid = $cnt;
+         $valid = $reset ? 1'b0: ($equals_in & !(>>1$equals_in)) ? 1'b1: 1'b0;
+         $valid_or_reset = $valid || $reset;
+         
+      ?$valid
+         @1
+            $sum[7:0] = $val1 + $val2;
+            $diff[7:0] = $val1 - $val2;
+            $prod[7:0] = $val1 * $val2;
+            $quot[7:0] = $val1 / $val2;
+            
+
+         
+
+          
+         
+      @2
+         $out[7:0] = $reset == 1'b1 ? 8'b0: !$valid ?
+                                >>1$out[7:0] : 
+                                     $reset ? 8'b0:
+                                     $op[1:0] == 2'b11
+                                        ? $quot :
+                                     $op[1:0] == 2'b10
+                                        ? $prod :
+                                     $op[1:0] == 2'b01
+                                        ? $diff :
+                                     $op[1:0] == 2'b00
+                                        ? $sum:
+                                          $op == 3'b100 
+                                          ? >>1$mem :
+                                               $out;
+                                          
+         $mem[7:0] = $reset == 1'b1 ? 8'b0:
+                           $op == 5 ? $out:
+                           >>1$mem;
+              
+      @3
+         $digit[3:0] = $out[3:0];
+         *uo_out = 
+           $digit == 4'h0 ? 8'b00111111:
+           $digit == 4'h1 ? 8'b00000110:
+           $digit == 4'h2 ? 8'b01011011:
+           $digit == 4'h3 ? 8'b01001111:
+           $digit == 4'h4 ? 8'b01100110:
+           $digit == 4'h5 ? 8'b01101101:
+           $digit == 4'h6 ? 8'b01111101:
+           $digit == 4'h7 ? 8'b00000111:
+           $digit == 4'h8 ? 8'b01111111:
+           $digit == 4'h9 ? 8'b01101111:
+           $digit == 4'h0 ? 8'b10111111: // 0. = 20
+           $digit == 4'h1 ? 8'b10000110: // 1. = 11
+           $digit == 4'h2 ? 8'b11011011: // 2. = 12
+           $digit == 4'h3 ? 8'b11001111: // 3. = 13
+           $digit == 4'h4 ? 8'b11100110: // 4. = 14
+           $digit == 4'h5 ? 8'b11101101: // 5. = 15
+           $digit == 4'h6 ? 8'b11111101: // 6. = 16
+           $digit == 4'h7 ? 8'b10000111: // 7. = 17
+           $digit == 4'h8 ? 8'b11111111: // 8. = 18
+           $digit == 4'h9 ? 8'b11101111: // 9. = 19
+                            8'b01110001;
+           
+             
+        
    // Note that pipesignals assigned here can be found under /fpga_pins/fpga.
    
    
+
+   m5+cal_viz(@2, /fpga)
    
    // Connect Tiny Tapeout outputs. Note that uio_ outputs are not available in the Tiny-Tapeout-3-based FPGA boards.
    *uo_out = 8'b0;
@@ -102,27 +145,13 @@ module top(input logic clk, input logic reset, input logic [31:0] cyc_cnt, outpu
    // Tiny tapeout I/O signals.
    logic [7:0] ui_in, uo_out;
    m5_if_neq(m5_target, FPGA, ['logic [7:0]uio_in,  uio_out, uio_oe;'])
-   logic [31:0] r;  // a random value
+   logic [31:0] r;
    always @(posedge clk) r <= m5_if(m5_MAKERCHIP, ['$urandom()'], ['0']);
    assign ui_in = r[7:0];
    m5_if_neq(m5_target, FPGA, ['assign uio_in = 8'b0;'])
    logic ena = 1'b0;
    logic rst_n = ! reset;
    
-   /*
-   // Or, to provide specific inputs at specific times (as for lab C-TB) ...
-   // BE SURE TO COMMENT THE ASSIGNMENT OF INPUTS ABOVE.
-   // BE SURE TO DRIVE THESE ON THE B-PHASE OF THE CLOCK (ODD STEPS).
-   // Driving on the rising clock edge creates a race with the clock that has unpredictable simulation behavior.
-   initial begin
-      #1  // Drive inputs on the B-phase.
-         ui_in = 8'h0;
-      #10 // Step 5 cycles, past reset.
-         ui_in = 8'hFF;
-      // ...etc.
-   end
-   */
-
    // Instantiate the Tiny Tapeout module.
    m5_user_module_name tt(.*);
    
@@ -161,7 +190,7 @@ module m5_user_module_name (
    m5+tt_connections()
    
    // Instantiate the Virtual FPGA Lab.
-   m5+board(/top, /fpga, 7, $, , my_design)
+   m5+board(/top, /fpga, 7, $, , calc)
    // Label the switch inputs [0..7] (1..8 on the physical switch panel) (top-to-bottom).
    m5+tt_input_labels_viz(['"Value[0]", "Value[1]", "Value[2]", "Value[3]", "Op[0]", "Op[1]", "Op[2]", "="'])
 
